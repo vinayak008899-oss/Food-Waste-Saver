@@ -1,72 +1,131 @@
 import streamlit as st
-import pandas as pd
+import random
 
-# 1. SETUP THE PAGE
-st.set_page_config(page_title="Food Saver Marketplace", page_icon="🛒", layout="wide")
-st.title("🛒 Jaipur Food Saver: Live Marketplace")
+# 1. PAGE SETUP (Mobile Friendly Layout)
+st.set_page_config(page_title="Jaipur Food Saver", page_icon="🍔", layout="centered")
 
-# --- DATABASE SIMULATION (This holds the live deals) ---
-# In a real startup, this would be a Cloud Database.
-# For now, we simulate "Current Deals" available in the market.
+# --- MOCK DATABASE (With Locations & Images) ---
 if 'deals_db' not in st.session_state:
     st.session_state['deals_db'] = [
-        {"Item": "Chocolate Cake", "Shop": "Sharma Bakery", "Original": 500, "Price": 250, "Discount": "50%", "Status": "Available"},
-        {"Item": "Amul Milk", "Shop": "Reliance Fresh", "Original": 60, "Price": 12, "Discount": "80%", "Status": "Fast Selling!"},
+        {
+            "Item": "Chocolate Truffle", 
+            "Shop": "Sharma Bakery", 
+            "Location": "Vaishali Nagar", 
+            "Original": 500, 
+            "Price": 250, 
+            "Image": "https://source.unsplash.com/400x300/?cake"
+        },
+        {
+            "Item": "Farmhouse Pizza", 
+            "Shop": "Dominos Surplus", 
+            "Location": "Raja Park", 
+            "Original": 400, 
+            "Price": 150, 
+            "Image": "https://source.unsplash.com/400x300/?pizza"
+        },
+        {
+            "Item": "Paneer Patties (Bulk)", 
+            "Shop": "Rawat Mishthan", 
+            "Location": "Sindhi Camp", 
+            "Original": 200, 
+            "Price": 50, 
+            "Image": "https://source.unsplash.com/400x300/?indianfood"
+        }
     ]
 
-# 2. CREATE TABS (The Two Faces)
-tab1, tab2 = st.tabs(["🛍️ FOR CUSTOMERS", "🏪 FOR SHOPKEEPERS"])
+# 2. APP TITLE
+st.title("🍔 Jaipur Food Saver")
+st.write("Don't let good food go to waste. Eat cheap, save the planet.")
 
-# --- TAB 1: THE CUSTOMER VIEW (What Students See) ---
+# 3. TABS (Customer vs Shopkeeper)
+tab1, tab2 = st.tabs(["🛍️ I WANT FOOD", "🏪 I HAVE FOOD"])
+
+# --- TAB 1: THE CUSTOMER EXPERIENCE (Visual & Local) ---
 with tab1:
-    st.header("⚡ Live Flash Sales in Jaipur")
-    st.write("Grab these deals before they expire!")
+    # THE "NEAR ME" FILTER
+    locations = ["All Jaipur", "Vaishali Nagar", "Raja Park", "Sindhi Camp", "Malviya Nagar"]
+    selected_location = st.selectbox("📍 Where are you?", locations)
     
-    # Show the deals in a nice table
-    deals_df = pd.DataFrame(st.session_state['deals_db'])
-    st.dataframe(deals_df, use_container_width=True)
+    st.markdown("---") # A divider line
     
-    st.info("ℹ️ Found a deal? Go to the shop and show this screen to claim it!")
+    # FILTER THE DEALS
+    count = 0
+    for deal in st.session_state['deals_db']:
+        # Show deal IF "All Jaipur" is selected OR locations match
+        if selected_location == "All Jaipur" or deal["Location"] == selected_location:
+            count += 1
+            
+            # --- THE "CARD" UI (Beautiful Look) ---
+            with st.container():
+                # Create 2 columns: Image on Left, Details on Right
+                c1, c2 = st.columns([1, 2])
+                
+                with c1:
+                    # Show the tasty food image
+                    try:
+                        st.image(deal["Image"], use_container_width=True)
+                    except:
+                        st.write("🖼️ Image Loading...")
+                
+                with c2:
+                    st.subheader(deal["Item"])
+                    st.write(f"🏠 **{deal['Shop']}** ({deal['Location']})")
+                    
+                    # Price Math
+                    discount_val = int(((deal['Original'] - deal['Price']) / deal['Original']) * 100)
+                    
+                    # The Price Tag
+                    st.markdown(f"### ₹{deal['Price']}  <span style='color:red; font-size:15px'><s>₹{deal['Original']}</s> ({discount_val}% OFF)</span>", unsafe_allow_html=True)
+                    
+                    if st.button(f"👉 Claim this Deal", key=random.random()):
+                        st.success(f"🎉 Reserved! Go to {deal['Shop']} and show this screen.")
+            
+            st.markdown("---") # Divider between cards
 
-# --- TAB 2: THE SHOPKEEPER VIEW (The AI Tool) ---
+    if count == 0:
+        st.warning(f"No deals found in {selected_location} right now. Check back later!")
+
+
+# --- TAB 2: THE SHOPKEEPER EXPERIENCE (Easy Posting) ---
 with tab2:
-    st.header("📝 Post a New Deal")
-    st.write("Use AI to calculate the best price and post it to the marketplace.")
+    st.header("📝 Post a Flash Sale")
     
-    col1, col2 = st.columns(2)
-    with col1:
+    with st.form("shop_form"):
         shop_name = st.text_input("Shop Name", "My Store")
-        item_name = st.text_input("Product Name", "Sandwich")
-    with col2:
-        original_price = st.number_input("Original Price (₹)", min_value=10, value=100)
-        days_left = st.slider("Days to Expiry", 0, 7, 1)
-
-    # THE AI CALCULATION
-    if days_left == 0:
-        st.error("Item Expired. Do not sell.")
-        valid_deal = False
-    else:
-        valid_deal = True
-        discount = 0
-        if days_left <= 1: discount = 0.80
-        elif days_left <= 3: discount = 0.50
-        elif days_left <= 7: discount = 0.10
+        location = st.selectbox("Shop Location", locations[1:]) # Skip "All Jaipur"
+        item_name = st.text_input("What are you selling?", "Veg Burger")
+        category = st.selectbox("Category (Auto-Image)", ["Pizza", "Burger", "Cake", "Indian Food", "Fruits"])
         
-        ai_price = round(original_price * (1 - discount), 2)
-        st.success(f"🤖 AI Suggested Price: ₹{ai_price} ({int(discount*100)}% Off)")
-
-    # THE "POST TO MARKET" BUTTON
-    if valid_deal:
-        if st.button("🚀 Post Deal to Marketplace"):
-            # Add the new deal to our "Live Database"
+        c1, c2 = st.columns(2)
+        with c1:
+            original_price = st.number_input("Original Price", 100)
+        with c2:
+            days_left = st.slider("Days to Expiry", 0, 5, 1)
+            
+        submitted = st.form_submit_button("🚀 Post Deal")
+        
+        if submitted:
+            # AI Pricing Logic
+            discount = 0.50 if days_left <= 2 else 0.20
+            ai_price = int(original_price * (1 - discount))
+            
+            # Auto-Select Image based on Category
+            img_map = {
+                "Pizza": "https://source.unsplash.com/400x300/?pizza",
+                "Burger": "https://source.unsplash.com/400x300/?burger",
+                "Cake": "https://source.unsplash.com/400x300/?cake",
+                "Indian Food": "https://source.unsplash.com/400x300/?samosa",
+                "Fruits": "https://source.unsplash.com/400x300/?fruit"
+            }
+            
             new_deal = {
                 "Item": item_name,
                 "Shop": shop_name,
+                "Location": location,
                 "Original": original_price,
                 "Price": ai_price,
-                "Discount": f"{int(discount*100)}%",
-                "Status": "Just Posted"
+                "Image": img_map[category]
             }
+            
             st.session_state['deals_db'].append(new_deal)
-            st.success(f"Success! {item_name} is now LIVE for customers to see.")
-            st.balloons()
+            st.success(f"✅ Live! Your {item_name} is listed in {location} for ₹{ai_price}")
