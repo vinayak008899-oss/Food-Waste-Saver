@@ -1,131 +1,87 @@
 import streamlit as st
 import random
 
-# 1. PAGE SETUP (Mobile Friendly Layout)
+# 1. APP CONFIG (Make it look like a Mobile App)
 st.set_page_config(page_title="Jaipur Food Saver", page_icon="🍔", layout="centered")
 
-# --- MOCK DATABASE (With Locations & Images) ---
-if 'deals_db' not in st.session_state:
-    st.session_state['deals_db'] = [
-        {
-            "Item": "Chocolate Truffle", 
-            "Shop": "Sharma Bakery", 
-            "Location": "Vaishali Nagar", 
-            "Original": 500, 
-            "Price": 250, 
-            "Image": "https://share.google/xNX4MB5XRTq5sr4n6"
-        },
-        {
-            "Item": "Farmhouse Pizza", 
-            "Shop": "Dominos Surplus", 
-            "Location": "Raja Park", 
-            "Original": 400, 
-            "Price": 150, 
-            "Image": "https://source.unsplash.com/400x300/?pizza"
-        },
-        {
-            "Item": "Paneer Patties (Bulk)", 
-            "Shop": "Rawat Mishthan", 
-            "Location": "Sindhi Camp", 
-            "Original": 200, 
-            "Price": 50, 
-            "Image": "https://source.unsplash.com/400x300/?indianfood"
-        }
+# --- DATABASE (Simulated) ---
+if 'deals' not in st.session_state:
+    st.session_state['deals'] = [
+        {"Item": "Chocolate Truffle", "Shop": "Sharma Bakery", "Loc": "Vaishali Nagar", "Old": 500, "New": 250, "Img": "https://source.unsplash.com/400x300/?cake"},
+        {"Item": "Paneer Patties", "Shop": "Rawat Mishthan", "Loc": "Sindhi Camp", "Old": 40, "New": 20, "Img": "https://source.unsplash.com/400x300/?samosa"},
+        {"Item": "Veg Supreme Pizza", "Shop": "Dominos Leftover", "Loc": "Malviya Nagar", "Old": 600, "New": 199, "Img": "https://source.unsplash.com/400x300/?pizza"},
     ]
 
-# 2. APP TITLE
+# 2. HEADER
 st.title("🍔 Jaipur Food Saver")
-st.write("Don't let good food go to waste. Eat cheap, save the planet.")
+st.caption("Save Money. Save Food. Save Earth.")
 
-# 3. TABS (Customer vs Shopkeeper)
-tab1, tab2 = st.tabs(["🛍️ I WANT FOOD", "🏪 I HAVE FOOD"])
+# 3. TABS
+tab_buyer, tab_seller = st.tabs(["🤤 I Want Food", "📢 I Am a Shopkeeper"])
 
-# --- TAB 1: THE CUSTOMER EXPERIENCE (Visual & Local) ---
-with tab1:
-    # THE "NEAR ME" FILTER
-    locations = ["All Jaipur", "Vaishali Nagar", "Raja Park", "Sindhi Camp", "Malviya Nagar"]
-    selected_location = st.selectbox("📍 Where are you?", locations)
+# --- TAB 1: BUYER (The Visual "Zomato" Style) ---
+with tab_buyer:
+    # A. LOCATION FILTER (Crucial for "Near Me")
+    locations = ["All Jaipur", "Vaishali Nagar", "Sindhi Camp", "Malviya Nagar", "Raja Park"]
+    selected_loc = st.selectbox("📍 Where are you right now?", locations)
     
-    st.markdown("---") # A divider line
+    st.markdown("---")
     
-    # FILTER THE DEALS
-    count = 0
-    for deal in st.session_state['deals_db']:
-        # Show deal IF "All Jaipur" is selected OR locations match
-        if selected_location == "All Jaipur" or deal["Location"] == selected_location:
-            count += 1
+    # B. DISPLAY CARDS
+    found = False
+    for deal in st.session_state['deals']:
+        if selected_loc == "All Jaipur" or deal['Loc'] == selected_loc:
+            found = True
             
-            # --- THE "CARD" UI (Beautiful Look) ---
+            # THE "CARD" UI
             with st.container():
-                # Create 2 columns: Image on Left, Details on Right
                 c1, c2 = st.columns([1, 2])
-                
                 with c1:
-                    # Show the tasty food image
-                    try:
-                        st.image(deal["Image"], use_container_width=True)
-                    except:
-                        st.write("🖼️ Image Loading...")
-                
+                    st.image(deal['Img'], use_container_width=True)
                 with c2:
-                    st.subheader(deal["Item"])
-                    st.write(f"🏠 **{deal['Shop']}** ({deal['Location']})")
+                    st.subheader(deal['Item'])
+                    st.write(f"🏠 **{deal['Shop']}** ({deal['Loc']})")
+                    discount = int(((deal['Old'] - deal['New']) / deal['Old']) * 100)
+                    st.markdown(f"### ₹{deal['New']}  <span style='color:red; font-size:14px'><s>₹{deal['Old']}</s> ({discount}% OFF)</span>", unsafe_allow_html=True)
                     
-                    # Price Math
-                    discount_val = int(((deal['Original'] - deal['Price']) / deal['Original']) * 100)
-                    
-                    # The Price Tag
-                    st.markdown(f"### ₹{deal['Price']}  <span style='color:red; font-size:15px'><s>₹{deal['Original']}</s> ({discount_val}% OFF)</span>", unsafe_allow_html=True)
-                    
-                    if st.button(f"👉 Claim this Deal", key=random.random()):
-                        st.success(f"🎉 Reserved! Go to {deal['Shop']} and show this screen.")
+                    # The "Book Now" Logic
+                    if st.button(f"👉 Reserve", key=random.random()):
+                        st.balloons()
+                        st.success(f"Reserved! Go to {deal['Shop']} in next 30 mins.")
+            st.markdown("---")
             
-            st.markdown("---") # Divider between cards
+    if not found:
+        st.info(f"😕 No deals in {selected_loc} right now. Check Raja Park?")
 
-    if count == 0:
-        st.warning(f"No deals found in {selected_location} right now. Check back later!")
-
-
-# --- TAB 2: THE SHOPKEEPER EXPERIENCE (Easy Posting) ---
-with tab2:
-    st.header("📝 Post a Flash Sale")
+# --- TAB 2: SELLER (The Notification Engine) ---
+with tab_seller:
+    st.write("### 🚀 Post a Flash Deal")
     
     with st.form("shop_form"):
-        shop_name = st.text_input("Shop Name", "My Store")
-        location = st.selectbox("Shop Location", locations[1:]) # Skip "All Jaipur"
-        item_name = st.text_input("What are you selling?", "Veg Burger")
-        category = st.selectbox("Category (Auto-Image)", ["Pizza", "Burger", "Cake", "Indian Food", "Fruits"])
+        shop = st.text_input("Shop Name", "My Bakery")
+        loc = st.selectbox("Location", locations[1:])
+        item = st.text_input("Item Name", "Cream Roll")
+        price = st.number_input("Discounted Price (₹)", 50)
         
-        c1, c2 = st.columns(2)
-        with c1:
-            original_price = st.number_input("Original Price", 100)
-        with c2:
-            days_left = st.slider("Days to Expiry", 0, 5, 1)
-            
-        submitted = st.form_submit_button("🚀 Post Deal")
+        # Auto-Image Logic
+        category = st.selectbox("Category", ["Cake", "Pizza", "Indian", "Burger"])
+        
+        submitted = st.form_submit_button("Post Deal")
         
         if submitted:
-            # AI Pricing Logic
-            discount = 0.50 if days_left <= 2 else 0.20
-            ai_price = int(original_price * (1 - discount))
-            
-            # Auto-Select Image based on Category
-            img_map = {
-                "Pizza": "https://source.unsplash.com/400x300/?pizza",
-                "Burger": "https://source.unsplash.com/400x300/?burger",
-                "Cake": "https://source.unsplash.com/400x300/?cake",
-                "Indian Food": "https://source.unsplash.com/400x300/?samosa",
-                "Fruits": "https://source.unsplash.com/400x300/?fruit"
-            }
-            
+            # 1. Add to Database
+            img_map = {"Cake": "cake", "Pizza": "pizza", "Indian": "curry", "Burger": "burger"}
             new_deal = {
-                "Item": item_name,
-                "Shop": shop_name,
-                "Location": location,
-                "Original": original_price,
-                "Price": ai_price,
-                "Image": img_map[category]
+                "Item": item, "Shop": shop, "Loc": loc, "Old": price*2, "New": price, 
+                "Img": f"https://source.unsplash.com/400x300/?{img_map[category]}"
             }
+            st.session_state['deals'].append(new_deal)
             
-            st.session_state['deals_db'].append(new_deal)
-            st.success(f"✅ Live! Your {item_name} is listed in {location} for ₹{ai_price}")
+            # 2. THE NOTIFICATION SYSTEM (WhatsApp)
+            # This generates a pre-written message they can blast to customers
+            wa_text = f"🔥 FLASH SALE at {shop}! {item} for just ₹{price}. Come to {loc} before it is gone!"
+            wa_link = f"https://wa.me/?text={wa_text.replace(' ', '%20')}"
+            
+            st.success("✅ Deal is Live on the App!")
+            st.markdown(f"### 📢 Notify Your Customers:")
+            st.link_button("📲 Send WhatsApp Blast", wa_link)
