@@ -13,7 +13,7 @@ if 'deals_db' not in st.session_state:
             "Location": "Vaishali Nagar", 
             "Original": 500, 
             "Price": 250, 
-            "Image": "https://share.google/Q9hUHs2fcOfePE5mv
+            "Image": "https://share.google/xNX4MB5XRTq5sr4n6"
         },
         {
             "Item": "Farmhouse Pizza", 
