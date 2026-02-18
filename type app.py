@@ -114,3 +114,44 @@ with tab_seller:
             
             st.success("✅ Deal is Live on the App!")
             st.link_button("📲 Send WhatsApp Blast", wa_link)
+# ... (After st.set_page_config) ...
+
+# --- 🎨 DESIGN ENGINE (CSS) ---
+st.markdown("""
+<style>
+    /* 1. The Main Background (Warm Gradient) */
+    .stApp {
+        background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); /* Subtle Grey */
+        background-image: linear-gradient(120deg, #f6d365 0%, #fda085 100%); /* Orange Sunset */
+    }
+
+    /* 2. Card Styling (White Box with Shadow) */
+    div[data-testid="stVerticalBlock"] > div > div {
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 10px;
+    }
+
+    /* 3. Button Styling (Pill Shape) */
+    div.stButton > button {
+        width: 100%;
+        background-color: #FF4B4B;
+        color: white;
+        border-radius: 25px;
+        border: none;
+        padding: 10px 20px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    
+    div.stButton > button:hover {
+        background-color: #D00000;
+        transform: scale(1.02);
+        color: white;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ... (Rest of your code) ...
