@@ -152,5 +152,4 @@ with tab_seller:
                 }
                 st.session_state['deals'].append(new_deal)
                 st.success("✅ Deal is Live!")
-see your post.")
 
