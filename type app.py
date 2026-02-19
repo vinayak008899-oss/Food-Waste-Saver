@@ -78,49 +78,4 @@ with tab_buyer:
                         with col_b:
                             st.link_button("🗺️ Get Directions", map_link)
                             
-            st.markdown("---")
             
-    if not found:
-        st.info(f"😕 No deals in {selected_loc} right now.")
-
-# --- TAB 2: SELLER (Now asks for Phone Number) ---
-with tab_seller:
-    st.write("### 🚀 Post a Flash Deal")
-    
-    with st.form("shop_form"):
-        shop = st.text_input("Shop Name", "My Bakery")
-        
-        # NEW: Ask for their number so customers can reach them!
-        phone = st.text_input("Your WhatsApp Number (with country code, e.g., 919876543210)", "91")
-        
-        loc = st.selectbox("Location", locations[1:])
-        item = st.text_input("Item Name", "Cream Roll")
-        price = st.number_input("Discounted Price (₹)", 50)
-        category = st.selectbox("Category", ["Cake", "Pizza", "Indian", "Burger", "Fruits"])
-        
-        submitted = st.form_submit_button("Post Deal")
-        
-        if submitted:
-            # Map Category to Image Tool
-            img_map = {
-                "Cake": "cake", 
-                "Pizza": "pizza", 
-                "Indian": "samosa", 
-                "Burger": "burger", 
-                "Fruits": "fruit"
-            }
-            
-            # NEW: Save the Phone Number into the database
-            new_deal = {
-                "Item": item, 
-                "Shop": shop, 
-                "Loc": loc, 
-                "Old": price * 2, 
-                "New": price, 
-                "Img": f"https://loremflickr.com/400/300/{img_map[category]}",
-                "Phone": phone  # <--- WE ADDED THIS HERE
-            }
-            st.session_state['deals'].append(new_deal)
-            
-            st.success("✅ Deal is Live on the App!")
-            st.info("Customers can now click 'Reserve' to WhatsApp you directly.")
