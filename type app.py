@@ -41,11 +41,10 @@ st.markdown("""
         letter-spacing: 1px;
     }
 
-    /* HIDE STREAMLIT WATERMARKS */
-    #MainMenu {visibility: hidden;}
+    /* THE FIX: Restore the header for mobile menu, but hide deploy button & footer */
     footer {visibility: hidden;}
-    header {visibility: hidden;}
     .stDeployButton {display:none;}
+    header {background-color: transparent !important;}
     
     /* CINEMATIC DARK BACKGROUND */
     .stApp {
@@ -73,8 +72,8 @@ st.markdown("""
     div.stButton > button {
         width: 100%;
         background: transparent;
-        color: #D4AF37 !important; /* Champagne Gold */
-        border-radius: 0px; /* Sharp corners for premium feel */
+        color: #D4AF37 !important; 
+        border-radius: 0px; 
         border: 1px solid #D4AF37;
         padding: 12px 20px;
         font-family: 'Montserrat', sans-serif !important;
@@ -117,14 +116,14 @@ with st.sidebar:
     # Matching the exact video menu options
     if st.button("HOME"): st.session_state['current_page'] = 'HOME'
     if st.button("GALLERY"): st.session_state['current_page'] = 'GALLERY'
-    if st.button("MENU"): st.session_state['current_page'] = 'HOME' # Redirects to live food
+    if st.button("MENU"): st.session_state['current_page'] = 'HOME' 
     if st.button("PARTY BOOKING"): st.session_state['current_page'] = 'PARTY'
     if st.button("CONTACT"): st.session_state['current_page'] = 'CONTACT'
-    if st.button("RESERVATION"): st.session_state['current_page'] = 'RESERVATION' # This is now the Shop Portal
+    if st.button("RESERVATION"): st.session_state['current_page'] = 'RESERVATION' 
     
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     st.markdown("---")
-    if st.button("Admin"): st.session_state['current_page'] = 'admin'
+    if st.button("Admin Panel"): st.session_state['current_page'] = 'admin'
 
 # ==========================================
 # PAGE: HOME & MENU (The Food Feed)
@@ -132,7 +131,7 @@ with st.sidebar:
 if st.session_state['current_page'] == 'HOME':
     # Cinematic Header
     st.markdown("""
-        <div style="text-align: center; padding: 40px 0 40px 0;">
+        <div style="text-align: center; padding: 10px 0 40px 0;">
             <p style='color: #D4AF37; font-weight: 400; font-size: 14px; letter-spacing: 3px; margin-bottom: 10px;'>EXCLUSIVE ACCESS</p>
             <h1 style='font-size: 48px; margin-top: 0;'>Jaipur Food Saver</h1>
         </div>
