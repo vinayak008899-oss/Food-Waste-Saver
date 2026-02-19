@@ -29,35 +29,35 @@ with st.sidebar:
     st.caption("Jaipur, Rajasthan")
     st.markdown("---")
     
-    # NORMAL USER BUTTONS (Dummy buttons for realism)
+    # NORMAL USER BUTTONS 
     st.button("👤 My Profile")
     st.button("📞 Help & Support")
     
     st.markdown("---")
-    st.write("### 🔒 System Access")
     
-    # THE CEO LOCK
-    pwd = st.text_input("Enter Passkey", type="password")
-    
-    if pwd == "vinayak123": # Your secret password
-        st.success("CEO Dashboard Unlocked.")
+    # THE HIDDEN CEO LOCK (It stays collapsed until you click it)
+    with st.expander("🔒 Admin Access"):
+        pwd = st.text_input("Enter Passkey", type="password")
         
-        # Calculate Total Money Made
-        total_leads = len(st.session_state['leads'])
-        total_revenue = total_leads * 5
-        
-        # Display the Stats right in the menu
-        st.metric("Leads Generated", total_leads)
-        st.metric("Owed Revenue (₹5/Lead)", f"₹{total_revenue}")
-        
-        st.write("**Live Click Ledger:**")
-        if total_leads > 0:
-            st.dataframe(st.session_state['leads'], use_container_width=True)
-        else:
-            st.caption("No leads generated yet.")
+        if pwd == "Vinayak#0000": # Your new secure password
+            st.success("CEO Dashboard Unlocked.")
             
-    elif pwd != "":
-        st.error("❌ Access Denied.")
+            # Calculate Total Money Made
+            total_leads = len(st.session_state['leads'])
+            total_revenue = total_leads * 5
+            
+            # Display the Stats right in the menu
+            st.metric("Leads Generated", total_leads)
+            st.metric("Owed Revenue (₹5/Lead)", f"₹{total_revenue}")
+            
+            st.write("**Live Click Ledger:**")
+            if total_leads > 0:
+                st.dataframe(st.session_state['leads'], use_container_width=True)
+            else:
+                st.caption("No leads generated yet.")
+                
+        elif pwd != "":
+            st.error("❌ Access Denied.")
 
 # --- 4. DESIGN ENGINE (CSS) ---
 st.markdown("""
@@ -93,7 +93,7 @@ st.title("🍔 Jaipur Food Saver")
 st.markdown("**Save Money. Save Food. Save Earth.**")
 st.write("")
 
-# --- 6. TABS (Only 2 Tabs left for the public) ---
+# --- 6. TABS ---
 tab_buyer, tab_seller = st.tabs(["🤤 I Want Food", "📢 Post Deal"])
 
 # ==========================================
