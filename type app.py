@@ -25,62 +25,77 @@ if 'current_page' not in st.session_state:
 if 'admin_unlocked' not in st.session_state:
     st.session_state['admin_unlocked'] = False
 
-# --- 4. THE "PREMIUM" UI ENGINE (CSS) ---
+# --- 4. THE "PREMIUM ANIMATED" UI ENGINE (CSS) ---
 st.markdown("""
 <style>
-    /* Hide Streamlit Branding */
+    /* 1. IMPORT PREMIUM STARTUP FONT (POPPINS) */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+    
+    html, body, [class*="css"], h1, h2, h3, h4, h5, h6, p, span, div, button {
+        font-family: 'Poppins', sans-serif !important;
+    }
+
+    /* 2. HIDE STREAMLIT WATERMARKS */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     .stDeployButton {display:none;}
     
-    /* Premium Background - Clean Crisp White/Gray */
+    /* 3. CLEAN BACKGROUND & SMOOTH LOAD ANIMATION */
     .stApp {
-        background-color: #FAFAFA;
-        animation: appFadeIn 0.8s ease-out;
-        font-family: 'Inter', 'Helvetica Neue', sans-serif;
+        background-color: #F8F9FA;
+        animation: appFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1);
     }
     @keyframes appFadeIn {
-        0% { opacity: 0; transform: translateY(20px); }
-        100% { opacity: 1; transform: translateY(0); }
+        0% { opacity: 0; transform: translateY(20px) scale(0.98); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
     }
     
-    /* Food Card Styling - Soft Shadows & Rounded Corners */
-    div[data-testid="stVerticalBlock"] > div > div > div[data-testid="stVerticalBlock"] {
-        background-color: #FFFFFF;
-        border-radius: 16px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        padding: 15px;
-        border: 1px solid #F0F0F0;
-        transition: transform 0.2s ease-in-out;
+    /* 4. FOOD CARD ANIMATIONS (The "Hover Lift") */
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        border-radius: 20px !important;
+        background: #FFFFFF !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
+        border: 1px solid #F0F0F0 !important;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+    }
+    [data-testid="stVerticalBlockBorderWrapper"]:hover {
+        transform: translateY(-6px) !important;
+        box-shadow: 0 15px 30px rgba(226, 55, 68, 0.1) !important;
+        border-color: rgba(226, 55, 68, 0.3) !important;
     }
     
-    /* Professional High-Contrast Buttons */
+    /* 5. PREMIUM BUTTON PHYSICS */
     div.stButton > button {
         width: 100%;
-        background-color: #E23744; /* Zomato Cherry Red */
+        background: linear-gradient(135deg, #E23744 0%, #D0202D 100%);
         color: white;
-        border-radius: 12px;
+        border-radius: 14px;
         border: none;
         padding: 12px 20px;
-        font-weight: 700;
+        font-weight: 600;
         letter-spacing: 0.5px;
-        box-shadow: 0 4px 6px rgba(226, 55, 68, 0.2);
-        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(226, 55, 68, 0.25);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
     div.stButton > button:hover {
-        background-color: #C12735;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(226, 55, 68, 0.3);
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 8px 20px rgba(226, 55, 68, 0.4);
+    }
+    div.stButton > button:active {
+        transform: translateY(1px) scale(0.98);
+        box-shadow: 0 2px 5px rgba(226, 55, 68, 0.2);
     }
     
-    /* Custom Tab Styling */
+    /* 6. TAB STYLING */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 20px;
+        gap: 25px;
+        border-bottom: 2px solid #F0F0F0;
     }
     .stTabs [aria-selected="true"] {
         color: #E23744 !important;
-        font-weight: 700;
+        border-bottom: 3px solid #E23744 !important;
+        font-weight: 700 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -102,9 +117,13 @@ with st.sidebar:
 # PAGE 1: THE PUBLIC MARKETPLACE
 # ==========================================
 if st.session_state['current_page'] == 'home':
-    st.markdown("<h1 style='text-align: center; color: #1C1C1C;'>🍔 Food Saver</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #777; font-weight: 500;'>Save Money. Save Food. Save Jaipur.</p>", unsafe_allow_html=True)
-    st.write("")
+    # Animated Title Header
+    st.markdown("""
+        <div style="text-align: center; padding: 10px 0 20px 0;">
+            <h1 style='color: #111; font-weight: 800; font-size: 42px; margin-bottom: 0;'>🍔 Food Saver</h1>
+            <p style='color: #E23744; font-weight: 600; font-size: 16px; margin-top: -5px; letter-spacing: 1px;'>SAVE MONEY. SAVE FOOD. SAVE JAIPUR.</p>
+        </div>
+    """, unsafe_allow_html=True)
 
     tab_buyer, tab_seller = st.tabs(["🤤 I Want Food", "📢 Post Deal"])
 
@@ -118,9 +137,9 @@ if st.session_state['current_page'] == 'home':
                 if len(deals) == 0:
                     st.write("")
                     st.write("")
-                    st.markdown("<h1 style='text-align: center; font-size: 60px;'>🍽️</h1>", unsafe_allow_html=True)
-                    st.markdown("<h3 style='text-align: center; color: #333;'>Jaipur ate everything!</h3>", unsafe_allow_html=True)
-                    st.markdown("<p style='text-align: center; color: #777; font-size: 16px;'>All deals are completely sold out right now.<br>Check back this evening for fresh midnight discounts.</p>", unsafe_allow_html=True)
+                    st.markdown("<h1 style='text-align: center; font-size: 70px; animation: appFadeIn 1.5s;'>🍽️</h1>", unsafe_allow_html=True)
+                    st.markdown("<h3 style='text-align: center; color: #111; font-weight: 700;'>Jaipur ate everything!</h3>", unsafe_allow_html=True)
+                    st.markdown("<p style='text-align: center; color: #777; font-size: 15px;'>All deals are completely sold out right now.<br>Check back this evening for fresh midnight discounts.</p>", unsafe_allow_html=True)
                     st.write("")
                     st.write("")
                 # -------------------------
@@ -132,22 +151,20 @@ if st.session_state['current_page'] == 'home':
                     for deal in deals:
                         if search_loc == "" or search_loc.lower() in deal['loc'].lower():
                             found = True
-                            with st.container():
+                            with st.container(border=True):
                                 c1, c2 = st.columns([1, 2])
                                 with c1:
                                     st.image(deal['image_url'], use_container_width=True)
                                 with c2:
                                     st.subheader(deal['item'])
-                                    st.write(f"🏠 **{deal['shop']}** ({deal['loc']})")
+                                    st.markdown(f"<p style='color: #666; font-size: 14px; font-weight: 500; margin-bottom: 5px;'>🏠 {deal['shop']} ({deal['loc']})</p>", unsafe_allow_html=True)
                                     discount = int(((deal['old_price'] - deal['new_price']) / deal['old_price']) * 100)
-                                    st.markdown(f"### ₹{deal['new_price']} <span style='color:red; font-size:14px'><s>₹{deal['old_price']}</s> ({discount}% OFF)</span>", unsafe_allow_html=True)
+                                    st.markdown(f"<h3 style='color: #111; margin-top: 0;'>₹{deal['new_price']} <span style='color:#E23744; font-size:14px; font-weight:600;'><s>₹{deal['old_price']}</s> ({discount}% OFF)</span></h3>", unsafe_allow_html=True)
                                     
                                     if st.button(f"👉 Reserve Now ({deal['quantity']} left)", key=f"res_{deal['id']}"):
-                                        # Inventory Deduction
                                         new_qty = deal['quantity'] - 1
                                         supabase.table("deals").update({"quantity": new_qty}).eq("id", deal['id']).execute()
                                         
-                                        # Log Lead
                                         current_time = datetime.now().strftime("%Y-%m-%d | %I:%M %p")
                                         supabase.table("leads").insert({"click_time": current_time, "shop_name": deal['shop'], "food_item": deal['item'], "revenue": "₹5"}).execute()
                                         
@@ -164,7 +181,7 @@ if st.session_state['current_page'] == 'home':
 
     with tab_seller:
         st.write("### 🚀 Post a Flash Deal")
-        with st.form("shop_form", border=False):
+        with st.form("shop_form", border=True):
             shop = st.text_input("Shop Name")
             phone = st.text_input("WhatsApp Number", "91")
             loc = st.text_input("Exact Address")
@@ -175,7 +192,7 @@ if st.session_state['current_page'] == 'home':
             photo = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"])
             if st.form_submit_button("Post Deal") and supabase:
                 if photo and loc:
-                    with st.spinner("Posting..."):
+                    with st.spinner("Posting to Server..."):
                         f_bytes = photo.getvalue()
                         f_name = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{photo.name.replace(' ','_')}"
                         supabase.storage.from_("food_images").upload(f_name, f_bytes, {"content-type": photo.type})
@@ -187,16 +204,16 @@ if st.session_state['current_page'] == 'home':
 # PAGE 2: CORPORATE MAINFRAME
 # ==========================================
 elif st.session_state['current_page'] == 'admin':
-    st.markdown("<h1 style='color: #1C1C1C;'>🔒 Corporate Mainframe</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #111;'>🔒 Corporate Mainframe</h1>", unsafe_allow_html=True)
     if not st.session_state['admin_unlocked']:
-        with st.form("admin_login"):
+        with st.form("admin_login", border=True):
             admin_id = st.text_input("Admin ID")
             pwd = st.text_input("Password", type="password")
             if st.form_submit_button("Log In"):
                 if admin_id != "" and pwd == "Vinayak#0000":
                     st.session_state['admin_unlocked'] = True
                     st.rerun()
-                else: st.error("❌ Denied.")
+                else: st.error("❌ Access Denied.")
     else:
         st.success("✅ Verified.")
         if supabase:
