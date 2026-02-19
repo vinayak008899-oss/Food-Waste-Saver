@@ -1,4 +1,4 @@
-        import streamlit as st
+import streamlit as st
 import random
 import urllib.parse
 from PIL import Image
