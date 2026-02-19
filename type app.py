@@ -7,7 +7,7 @@ from supabase import create_client, Client
 # 1. APP CONFIG
 st.set_page_config(page_title="Jaipur Food Saver", page_icon="🍔", layout="centered")
 
-# --- 2. DATABASE CONNECTION (The Engine) ---
+# --- 2. DATABASE CONNECTION ---
 @st.cache_resource
 def init_connection():
     try:
@@ -15,7 +15,7 @@ def init_connection():
         key = st.secrets["SUPABASE_KEY"]
         return create_client(url, key)
     except Exception as e:
-        st.error("⚠️ Vault disconnected. Ensure secrets are saved in Streamlit Settings.")
+        st.error("⚠️ Vault disconnected.")
         return None
 
 supabase = init_connection()
@@ -86,15 +86,15 @@ if st.session_state['current_page'] == 'home':
 
     tab_buyer, tab_seller = st.tabs(["🤤 I Want Food", "📢 Post Deal"])
 
-    # --- TAB 1: BUYER (Reads from Database) ---
+    # --- TAB 1: BUYER ---
     with tab_buyer:
         search_loc = st.text_input("📍 Search your area (e.g., WTP, Raja Park)", "")
         st.markdown("---")
         
         if supabase:
             try:
-                # Fetch live deals from the server (Newest first)
-                response = supabase.table("deals").select("*").order("id", desc=True).execute()
+                # NEW LOGIC: Only fetch deals where quantity is greater than 0
+                response = supabase.table("deals").select("*").gt("quantity", 0).order("id", desc=True).execute()
                 deals = response.data
                 
                 found = False
@@ -113,10 +113,15 @@ if st.session_state['current_page'] == 'home':
                                 discount = int(((deal['old_price'] - deal['new_price']) / deal['old_price']) * 100)
                                 st.markdown(f"### ₹{deal['new_price']}  <span style='color:red; font-size:14px'><s>₹{deal['old_price']}</s> ({discount}% OFF)</span>", unsafe_allow_html=True)
                                 
-                                if st.button(f"👉 Reserve Now", key=f"res_{deal['id']}"):
-                                    current_time = datetime.now().strftime("%Y-%m-%d | %I:%M %p")
+                                # BUTTON SHOWS EXACT QUANTITY LEFT
+                                if st.button(f"👉 Reserve Now ({deal['quantity']} left)", key=f"res_{deal['id']}"):
                                     
-                                    # SECRETLY LOG THE LEAD TO SUPABASE
+                                    # 1. LIVE DEDUCTION: Subtract 1 from the database
+                                    new_qty = deal['quantity'] - 1
+                                    supabase.table("deals").update({"quantity": new_qty}).eq("id", deal['id']).execute()
+                                    
+                                    # 2. LOG THE LEAD
+                                    current_time = datetime.now().strftime("%Y-%m-%d | %I:%M %p")
                                     supabase.table("leads").insert({
                                         "click_time": current_time,
                                         "shop_name": deal['shop'],
@@ -142,15 +147,22 @@ if st.session_state['current_page'] == 'home':
             except Exception as e:
                 st.error("Connecting to server...")
 
-    # --- TAB 2: SELLER (Writes to Database) ---
+    # --- TAB 2: SELLER ---
     with tab_seller:
         st.write("### 🚀 Post a Flash Deal")
         with st.form("shop_form", border=True):
             shop = st.text_input("Shop Name", "My Bakery")
-            phone = st.text_input("WhatsApp Number (e.g., 919876543210)", "91")
+            phone = st.text_input("WhatsApp Number", "91")
             loc = st.text_input("Exact Address", "e.g., Shop No 5, WTP Mall")
             item = st.text_input("Item Name", "Cream Roll")
-            price = int(st.number_input("Discounted Price (₹)", min_value=1, value=50))
+            
+            col_price, col_qty = st.columns(2)
+            with col_price:
+                price = int(st.number_input("Discounted Price (₹)", min_value=1, value=50))
+            with col_qty:
+                # NEW LOGIC: Ask shopkeeper how many items they have
+                stock = int(st.number_input("Quantity Available", min_value=1, value=1))
+                
             uploaded_photo = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"])
             submitted = st.form_submit_button("Post Deal")
             
@@ -162,7 +174,6 @@ if st.session_state['current_page'] == 'home':
                 else:
                     with st.spinner("Uploading to Server..."):
                         try:
-                            # 1. Upload the physical image to the bucket
                             file_bytes = uploaded_photo.getvalue()
                             clean_name = uploaded_photo.name.replace(" ", "_").replace("-", "_")
                             file_name = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{clean_name}"
@@ -174,7 +185,6 @@ if st.session_state['current_page'] == 'home':
                             )
                             img_url = supabase.storage.from_("food_images").get_public_url(file_name)
                             
-                            # 2. Write the text data to the Ledger
                             supabase.table("deals").insert({
                                 "item": item, 
                                 "shop": shop, 
@@ -182,7 +192,8 @@ if st.session_state['current_page'] == 'home':
                                 "old_price": price * 2, 
                                 "new_price": price, 
                                 "image_url": img_url, 
-                                "phone": phone
+                                "phone": phone,
+                                "quantity": stock # SAVES INVENTORY TO CLOUD
                             }).execute()
                             
                             st.success("✅ Deal is Live Permanently!")
@@ -215,7 +226,6 @@ elif st.session_state['current_page'] == 'admin':
         
         if supabase:
             try:
-                # Pull exact revenue metrics from the cloud
                 leads_data = supabase.table("leads").select("*").execute()
                 all_leads = leads_data.data
                 
