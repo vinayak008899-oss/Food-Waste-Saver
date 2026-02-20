@@ -36,7 +36,7 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,700;1,600&display=swap');
     
-    /* SAFE TEXT STYLING (Targeting text specifically so we don't break icons) */
+    /* SAFE TEXT STYLING */
     p, label, input, .stMarkdown p {
         font-family: 'Montserrat', sans-serif !important;
         color: #E0E0E0;
@@ -47,19 +47,11 @@ st.markdown("""
         letter-spacing: 1px;
     }
 
-    /* CLEANUP THE HEADER (Safely remove the right-side GitHub/Share junk) */
+    /* THE BULLETPROOF HEADER FIX */
     header { background-color: transparent !important; }
-    .stAppToolbar, [data-testid="stHeaderActionElements"] { display: none !important; }
+    .stAppToolbar { display: none !important; } /* Only hides the right-side tools safely */
+    .stDeployButton { display: none !important; } 
     footer { visibility: hidden; }
-    
-    /* MAKE THE NATIVE MENU ICON GOLD */
-    [data-testid="collapsedControl"], button[kind="header"] { 
-        color: #D4AF37 !important; 
-    }
-    [data-testid="collapsedControl"] svg, button[kind="header"] svg { 
-        fill: #D4AF37 !important; 
-        color: #D4AF37 !important; 
-    }
     
     /* CINEMATIC BACKGROUND */
     .stApp {
