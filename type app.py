@@ -46,28 +46,30 @@ st.markdown("""
         letter-spacing: 1px;
     }
 
-    /* --- THE NUCLEAR MENU OVERRIDE --- */
-    /* 1. Kill the default Streamlit graphic entirely */
+    /* --- THE BULLETPROOF MENU OVERRIDE --- */
+    /* 1. Make the default arrow invisible but keep its physical size so it's clickable */
     [data-testid="collapsedControl"] svg {
-        display: none !important;
+        visibility: hidden !important;
     }
-    /* 2. Inject the custom ☰ in Bright Gold */
-    [data-testid="collapsedControl"]::before {
+    /* 2. Paint the golden hamburger menu exactly over the ghost arrow */
+    [data-testid="collapsedControl"] {
+        position: relative !important;
+    }
+    [data-testid="collapsedControl"]::after {
         content: "☰" !important;
         color: #D4AF37 !important;
-        font-size: 35px !important;
-        font-weight: bold !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        line-height: 1 !important;
+        font-size: 32px !important;
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
     }
     /* 3. Destroy the Share/GitHub toolbar forever */
     header {background-color: transparent !important;}
     [data-testid="stHeaderActionElements"], .stAppToolbar, [data-testid="stToolbar"] {display: none !important;}
     .stDeployButton {display: none !important;}
     footer {visibility: hidden;}
-    /* --------------------------------- */
+    /* ------------------------------------- */
     
     /* CINEMATIC BACKGROUND */
     .stApp {
