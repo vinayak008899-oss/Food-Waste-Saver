@@ -46,9 +46,12 @@ st.markdown("""
         letter-spacing: 1px;
     }
 
-    footer {visibility: hidden;}
-    .stDeployButton {display:none;}
+    /* --- THE HEADER & MENU BUG FIX --- */
     header {background-color: transparent !important;}
+    [data-testid="stHeaderActionElements"] {display: none !important;} /* Kills the Share/GitHub junk */
+    [data-testid="collapsedControl"] svg {color: #D4AF37 !important; fill: #D4AF37 !important;} /* Makes Menu Gold */
+    footer {visibility: hidden;}
+    /* --------------------------------- */
     
     .stApp {
         background-color: #0A0A0A;
@@ -220,38 +223,31 @@ elif st.session_state['current_page'] == 'RESERVATION':
             if st.form_submit_button("PUBLISH OFFERING") and supabase:
                 if photo and loc:
                     with st.spinner("Processing & Uploading..."):
-                        # --- THE CINEMATIC IMAGE CROPPER & COMPRESSOR ---
                         img = Image.open(photo)
                         
-                        # Calculate 16:9 ratio
                         width, height = img.size
                         target_ratio = 16 / 9
                         current_ratio = width / height
                         
                         if current_ratio > target_ratio:
-                            # Image is too wide
                             new_width = int(height * target_ratio)
                             left = (width - new_width) / 2
                             right = (width + new_width) / 2
                             img = img.crop((left, 0, right, height))
                         elif current_ratio < target_ratio:
-                            # Image is too tall
                             new_height = int(width / target_ratio)
                             top = (height - new_height) / 2
                             bottom = (height + new_height) / 2
                             img = img.crop((0, top, width, bottom))
                             
-                        # Resize & Compress
                         img = img.resize((800, 450), Image.Resampling.LANCZOS)
                         buf = io.BytesIO()
                         
-                        # Handle images with transparency (PNG) properly
                         if img.mode in ("RGBA", "P"):
                             img = img.convert("RGB")
                             
                         img.save(buf, format="JPEG", quality=80)
                         f_bytes = buf.getvalue()
-                        # ------------------------------------------------
 
                         f_name = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{shop.replace(' ','_')}.jpg"
                         supabase.storage.from_("food_images").upload(f_name, f_bytes, {"content-type": "image/jpeg"})
