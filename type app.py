@@ -1,10 +1,11 @@
 import streamlit as st
 import urllib.parse
+import random
 from PIL import Image
 from datetime import datetime
 from supabase import create_client, Client
 
-# 1. APP CONFIG (Wide layout for cinematic feel)
+# 1. APP CONFIG
 st.set_page_config(page_title="Jaipur Food Saver", page_icon="🍷", layout="centered")
 
 # --- 2. DATABASE CONNECTION ---
@@ -19,18 +20,19 @@ def init_connection():
 
 supabase = init_connection()
 
-# --- 3. PAGE ROUTING & AUTH ---
+# --- 3. PAGE ROUTING & AUTH STATE ---
 if 'current_page' not in st.session_state:
     st.session_state['current_page'] = 'HOME'
 if 'admin_unlocked' not in st.session_state:
     st.session_state['admin_unlocked'] = False
 if 'vendor_unlocked' not in st.session_state:
     st.session_state['vendor_unlocked'] = False
+if 'vendor_phone' not in st.session_state:
+    st.session_state['vendor_phone'] = ""
 
 # --- 4. THE "MIDNIGHT LUXURY" UI ENGINE (CSS) ---
 st.markdown("""
 <style>
-    /* IMPORT LUXURY FONTS */
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,700;1,600&display=swap');
     
     html, body, [class*="css"], p, span, div {
@@ -186,26 +188,32 @@ elif st.session_state['current_page'] == 'RESERVATION':
     st.markdown("<h2 style='text-align: center; margin-top: 30px;'>Partner Portal</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #888; letter-spacing: 1px; margin-bottom: 40px;'>AUTHORIZED VENDORS ONLY</p>", unsafe_allow_html=True)
     
-    # --- THE SECURITY GATE ---
+    # --- THE SECURE LOGIN GATE ---
     if not st.session_state['vendor_unlocked']:
         with st.form("vendor_login", border=True):
-            pin = st.text_input("ENTER VENDOR PIN", type="password")
-            if st.form_submit_button("VERIFY ACCESS"):
-                if pin == "8899":
+            phone_input = st.text_input("REGISTERED PHONE NUMBER")
+            pin_input = st.text_input("4-DIGIT PIN", type="password")
+            if st.form_submit_button("AUTHENTICATE") and supabase:
+                # Check the database for a matching phone and PIN
+                auth_check = supabase.table("vendors").select("*").eq("phone", phone_input).eq("pin", pin_input).execute()
+                
+                if len(auth_check.data) > 0:
                     st.session_state['vendor_unlocked'] = True
+                    st.session_state['vendor_phone'] = phone_input # Save their number securely
                     st.rerun()
                 else: 
-                    st.error("Invalid Credentials. Access Denied.")
-    # -------------------------
+                    st.error("Authentication Failed. Invalid Number or PIN.")
+    # -----------------------------
     else:
-        st.success("Identity Verified. You may publish an offering.")
-        if st.button("⬅️ Lock Portal"):
+        st.success(f"Identity Verified. Logged in as: {st.session_state['vendor_phone']}")
+        if st.button("⬅️ Secure Logout"):
             st.session_state['vendor_unlocked'] = False
+            st.session_state['vendor_phone'] = ""
             st.rerun()
             
         with st.form("shop_form", border=True):
             shop = st.text_input("ESTABLISHMENT NAME")
-            phone = st.text_input("WHATSAPP NUMBER", "91")
+            # Notice: The WhatsApp number input box is completely GONE.
             loc = st.text_input("LOCATION")
             item = st.text_input("CULINARY ITEM")
             c_p, c_q = st.columns(2)
@@ -220,11 +228,22 @@ elif st.session_state['current_page'] == 'RESERVATION':
                         f_name = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{photo.name.replace(' ','_')}"
                         supabase.storage.from_("food_images").upload(f_name, f_bytes, {"content-type": photo.type})
                         img_url = supabase.storage.from_("food_images").get_public_url(f_name)
-                        supabase.table("deals").insert({"item": item, "shop": shop, "loc": loc, "old_price": price*2, "new_price": price, "image_url": img_url, "phone": phone, "quantity": stock}).execute()
+                        
+                        # INSERTS THE SESSION PHONE NUMBER AUTOMATICALLY
+                        supabase.table("deals").insert({
+                            "item": item, 
+                            "shop": shop, 
+                            "loc": loc, 
+                            "old_price": price*2, 
+                            "new_price": price, 
+                            "image_url": img_url, 
+                            "phone": st.session_state['vendor_phone'], 
+                            "quantity": stock
+                        }).execute()
                         st.success("Offering is now live.")
 
 # ==========================================
-# PAGES: PLACEHOLDERS (Gallery, Party, Contact)
+# PAGES: PLACEHOLDERS
 # ==========================================
 elif st.session_state['current_page'] in ['GALLERY', 'PARTY', 'CONTACT']:
     st.write("")
@@ -249,8 +268,31 @@ elif st.session_state['current_page'] == 'admin':
                 else: st.error("Access Denied.")
     else:
         st.success("Authentication Successful.")
-        if supabase:
-            leads_data = supabase.table("leads").select("*").execute()
-            all_leads = leads_data.data
-            st.metric("YIELD", f"₹{len(all_leads) * 5}")
-            st.dataframe(all_leads, use_container_width=True)
+        
+        tab_rev, tab_vendors = st.tabs(["💰 Revenue Tracker", "🔐 Vendor Management"])
+        
+        with tab_rev:
+            if supabase:
+                leads_data = supabase.table("leads").select("*").execute()
+                all_leads = leads_data.data
+                st.metric("YIELD", f"₹{len(all_leads) * 5}")
+                st.dataframe(all_leads, use_container_width=True)
+                
+        with tab_vendors:
+            st.markdown("### Authorize New Vendor")
+            with st.form("add_vendor_form", border=True):
+                new_phone = st.text_input("VENDOR WHATSAPP NUMBER (e.g., 919876543210)")
+                if st.form_submit_button("GENERATE ACCESS KEY") and supabase:
+                    if new_phone:
+                        new_pin = str(random.randint(1000, 9999)) # Generates the 4-digit code
+                        try:
+                            supabase.table("vendors").insert({"phone": new_phone, "pin": new_pin}).execute()
+                            st.success(f"AUTHORIZED. The exclusive PIN for {new_phone} is: {new_pin}")
+                            st.warning("Write this down. Hand it to the shopkeeper.")
+                        except Exception as e:
+                            st.error("Error: This number may already be in the database.")
+            
+            st.markdown("### 📜 Authorized Vendors Ledger")
+            if supabase:
+                v_data = supabase.table("vendors").select("*").execute()
+                st.dataframe(v_data.data, use_container_width=True)
