@@ -36,8 +36,9 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,700;1,600&display=swap');
     
-    html, body, p, label, input, div {
-        font-family: 'Montserrat', sans-serif;
+    /* SAFE TEXT STYLING (Targeting text specifically so we don't break icons) */
+    p, label, input, .stMarkdown p {
+        font-family: 'Montserrat', sans-serif !important;
         color: #E0E0E0;
     }
     h1, h2, h3, h4, h5 {
@@ -46,30 +47,19 @@ st.markdown("""
         letter-spacing: 1px;
     }
 
-    /* --- THE BULLETPROOF MENU OVERRIDE --- */
-    /* 1. Make the default arrow invisible but keep its physical size so it's clickable */
-    [data-testid="collapsedControl"] svg {
-        visibility: hidden !important;
+    /* CLEANUP THE HEADER (Safely remove the right-side GitHub/Share junk) */
+    header { background-color: transparent !important; }
+    .stAppToolbar, [data-testid="stHeaderActionElements"] { display: none !important; }
+    footer { visibility: hidden; }
+    
+    /* MAKE THE NATIVE MENU ICON GOLD */
+    [data-testid="collapsedControl"], button[kind="header"] { 
+        color: #D4AF37 !important; 
     }
-    /* 2. Paint the golden hamburger menu exactly over the ghost arrow */
-    [data-testid="collapsedControl"] {
-        position: relative !important;
+    [data-testid="collapsedControl"] svg, button[kind="header"] svg { 
+        fill: #D4AF37 !important; 
+        color: #D4AF37 !important; 
     }
-    [data-testid="collapsedControl"]::after {
-        content: "☰" !important;
-        color: #D4AF37 !important;
-        font-size: 32px !important;
-        position: absolute !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-    }
-    /* 3. Destroy the Share/GitHub toolbar forever */
-    header {background-color: transparent !important;}
-    [data-testid="stHeaderActionElements"], .stAppToolbar, [data-testid="stToolbar"] {display: none !important;}
-    .stDeployButton {display: none !important;}
-    footer {visibility: hidden;}
-    /* ------------------------------------- */
     
     /* CINEMATIC BACKGROUND */
     .stApp {
