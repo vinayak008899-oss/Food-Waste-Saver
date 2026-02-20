@@ -1,6 +1,7 @@
 import streamlit as st
 import urllib.parse
 import random
+import io
 from PIL import Image
 from datetime import datetime
 from supabase import create_client, Client
@@ -188,22 +189,18 @@ elif st.session_state['current_page'] == 'RESERVATION':
     st.markdown("<h2 style='text-align: center; margin-top: 30px;'>Partner Portal</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #888; letter-spacing: 1px; margin-bottom: 40px;'>AUTHORIZED VENDORS ONLY</p>", unsafe_allow_html=True)
     
-    # --- THE SECURE LOGIN GATE ---
     if not st.session_state['vendor_unlocked']:
         with st.form("vendor_login", border=True):
             phone_input = st.text_input("REGISTERED PHONE NUMBER")
             pin_input = st.text_input("4-DIGIT PIN", type="password")
             if st.form_submit_button("AUTHENTICATE") and supabase:
-                # Check the database for a matching phone and PIN
                 auth_check = supabase.table("vendors").select("*").eq("phone", phone_input).eq("pin", pin_input).execute()
-                
                 if len(auth_check.data) > 0:
                     st.session_state['vendor_unlocked'] = True
-                    st.session_state['vendor_phone'] = phone_input # Save their number securely
+                    st.session_state['vendor_phone'] = phone_input 
                     st.rerun()
                 else: 
                     st.error("Authentication Failed. Invalid Number or PIN.")
-    # -----------------------------
     else:
         st.success(f"Identity Verified. Logged in as: {st.session_state['vendor_phone']}")
         if st.button("⬅️ Secure Logout"):
@@ -213,7 +210,6 @@ elif st.session_state['current_page'] == 'RESERVATION':
             
         with st.form("shop_form", border=True):
             shop = st.text_input("ESTABLISHMENT NAME")
-            # Notice: The WhatsApp number input box is completely GONE.
             loc = st.text_input("LOCATION")
             item = st.text_input("CULINARY ITEM")
             c_p, c_q = st.columns(2)
@@ -223,13 +219,44 @@ elif st.session_state['current_page'] == 'RESERVATION':
             
             if st.form_submit_button("PUBLISH OFFERING") and supabase:
                 if photo and loc:
-                    with st.spinner("Publishing..."):
-                        f_bytes = photo.getvalue()
-                        f_name = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{photo.name.replace(' ','_')}"
-                        supabase.storage.from_("food_images").upload(f_name, f_bytes, {"content-type": photo.type})
+                    with st.spinner("Processing & Uploading..."):
+                        # --- THE CINEMATIC IMAGE CROPPER & COMPRESSOR ---
+                        img = Image.open(photo)
+                        
+                        # Calculate 16:9 ratio
+                        width, height = img.size
+                        target_ratio = 16 / 9
+                        current_ratio = width / height
+                        
+                        if current_ratio > target_ratio:
+                            # Image is too wide
+                            new_width = int(height * target_ratio)
+                            left = (width - new_width) / 2
+                            right = (width + new_width) / 2
+                            img = img.crop((left, 0, right, height))
+                        elif current_ratio < target_ratio:
+                            # Image is too tall
+                            new_height = int(width / target_ratio)
+                            top = (height - new_height) / 2
+                            bottom = (height + new_height) / 2
+                            img = img.crop((0, top, width, bottom))
+                            
+                        # Resize & Compress
+                        img = img.resize((800, 450), Image.Resampling.LANCZOS)
+                        buf = io.BytesIO()
+                        
+                        # Handle images with transparency (PNG) properly
+                        if img.mode in ("RGBA", "P"):
+                            img = img.convert("RGB")
+                            
+                        img.save(buf, format="JPEG", quality=80)
+                        f_bytes = buf.getvalue()
+                        # ------------------------------------------------
+
+                        f_name = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{shop.replace(' ','_')}.jpg"
+                        supabase.storage.from_("food_images").upload(f_name, f_bytes, {"content-type": "image/jpeg"})
                         img_url = supabase.storage.from_("food_images").get_public_url(f_name)
                         
-                        # INSERTS THE SESSION PHONE NUMBER AUTOMATICALLY
                         supabase.table("deals").insert({
                             "item": item, 
                             "shop": shop, 
@@ -284,7 +311,7 @@ elif st.session_state['current_page'] == 'admin':
                 new_phone = st.text_input("VENDOR WHATSAPP NUMBER (e.g., 919876543210)")
                 if st.form_submit_button("GENERATE ACCESS KEY") and supabase:
                     if new_phone:
-                        new_pin = str(random.randint(1000, 9999)) # Generates the 4-digit code
+                        new_pin = str(random.randint(1000, 9999)) 
                         try:
                             supabase.table("vendors").insert({"phone": new_phone, "pin": new_pin}).execute()
                             st.success(f"AUTHORIZED. The exclusive PIN for {new_phone} is: {new_pin}")
