@@ -47,18 +47,14 @@ st.markdown("""
         letter-spacing: 1px;
     }
 
-    /* THE GHOST HEADER FIX */
-    [data-testid="stHeader"] { background-color: transparent !important; }
-    
-    /* Hides the right-side tools safely without destroying the layout */
-    [data-testid="stToolbar"], .stAppToolbar, [data-testid="stHeaderActionElements"] { 
-        visibility: hidden !important; 
+    /* THE BULLETPROOF HEADER (We let Streamlit keep its tools, but we paint it black to blend in) */
+    [data-testid="stHeader"] {
+        background-color: #0A0A0A !important;
     }
     .stDeployButton { display: none !important; } 
     footer { visibility: hidden; }
     
     /* NATIVE MENU BUTTON TINTED GOLD */
-    [data-testid="collapsedControl"] { color: #D4AF37 !important; }
     [data-testid="collapsedControl"] svg {
         color: #D4AF37 !important;
         fill: #D4AF37 !important;
