@@ -36,7 +36,6 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,700;1,600&display=swap');
     
-    /* SAFE FONT APPLICATION (Notice 'button' is removed to protect the menu icon!) */
     html, body, p, label, input, div {
         font-family: 'Montserrat', sans-serif;
         color: #E0E0E0;
@@ -47,22 +46,28 @@ st.markdown("""
         letter-spacing: 1px;
     }
 
-    /* HEADER & TOOLBAR ASSASSINATION */
-    header {background-color: transparent !important;}
-    [data-testid="stHeaderActionElements"] {display: none !important;}
-    footer {visibility: hidden;}
-    .stDeployButton {display: none !important;}
-    
-    /* MENU BUTTON GOLD ACCENT */
-    [data-testid="collapsedControl"] {
-        color: #D4AF37 !important;
-        display: flex !important;
-        z-index: 999999 !important;
-    }
+    /* --- THE NUCLEAR MENU OVERRIDE --- */
+    /* 1. Kill the default Streamlit graphic entirely */
     [data-testid="collapsedControl"] svg {
-        fill: #D4AF37 !important; 
-        color: #D4AF37 !important;
+        display: none !important;
     }
+    /* 2. Inject the custom ☰ in Bright Gold */
+    [data-testid="collapsedControl"]::before {
+        content: "☰" !important;
+        color: #D4AF37 !important;
+        font-size: 35px !important;
+        font-weight: bold !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+    }
+    /* 3. Destroy the Share/GitHub toolbar forever */
+    header {background-color: transparent !important;}
+    [data-testid="stHeaderActionElements"], .stAppToolbar, [data-testid="stToolbar"] {display: none !important;}
+    .stDeployButton {display: none !important;}
+    footer {visibility: hidden;}
+    /* --------------------------------- */
     
     /* CINEMATIC BACKGROUND */
     .stApp {
