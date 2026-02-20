@@ -24,6 +24,8 @@ if 'current_page' not in st.session_state:
     st.session_state['current_page'] = 'HOME'
 if 'admin_unlocked' not in st.session_state:
     st.session_state['admin_unlocked'] = False
+if 'vendor_unlocked' not in st.session_state:
+    st.session_state['vendor_unlocked'] = False
 
 # --- 4. THE "MIDNIGHT LUXURY" UI ENGINE (CSS) ---
 st.markdown("""
@@ -41,12 +43,10 @@ st.markdown("""
         letter-spacing: 1px;
     }
 
-    /* THE FIX: Restore the header for mobile menu, but hide deploy button & footer */
     footer {visibility: hidden;}
     .stDeployButton {display:none;}
     header {background-color: transparent !important;}
     
-    /* CINEMATIC DARK BACKGROUND */
     .stApp {
         background-color: #0A0A0A;
         animation: appFadeIn 1.5s ease-out;
@@ -56,7 +56,6 @@ st.markdown("""
         100% { opacity: 1; filter: brightness(1); }
     }
     
-    /* FOOD CARDS - BORDERLESS DARK GLASS */
     [data-testid="stVerticalBlockBorderWrapper"] {
         border-radius: 4px !important;
         background: #121212 !important;
@@ -65,10 +64,9 @@ st.markdown("""
         transition: all 0.5s ease !important;
     }
     [data-testid="stVerticalBlockBorderWrapper"]:hover {
-        border-color: #D4AF37 !important; /* Gold Accent on Hover */
+        border-color: #D4AF37 !important; 
     }
     
-    /* LUXURY BUTTONS - HOLLOW WITH GOLD ACCENT */
     div.stButton > button {
         width: 100%;
         background: transparent;
@@ -88,7 +86,6 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
     }
     
-    /* INPUT FIELDS - DARK MODE */
     .stTextInput>div>div>input {
         background-color: #1A1A1A;
         color: #FFF;
@@ -101,7 +98,6 @@ st.markdown("""
         border: 1px solid #333;
     }
     
-    /* SIDEBAR STYLING */
     [data-testid="stSidebar"] {
         background-color: #050505 !important;
         border-right: 1px solid #222;
@@ -113,7 +109,6 @@ st.markdown("""
 with st.sidebar:
     st.markdown("<h2 style='text-align: center; color: #FFF; margin-bottom: 30px;'>JFS</h2>", unsafe_allow_html=True)
     
-    # Matching the exact video menu options
     if st.button("HOME"): st.session_state['current_page'] = 'HOME'
     if st.button("GALLERY"): st.session_state['current_page'] = 'GALLERY'
     if st.button("MENU"): st.session_state['current_page'] = 'HOME' 
@@ -126,10 +121,9 @@ with st.sidebar:
     if st.button("Admin Panel"): st.session_state['current_page'] = 'admin'
 
 # ==========================================
-# PAGE: HOME & MENU (The Food Feed)
+# PAGE: HOME & MENU 
 # ==========================================
 if st.session_state['current_page'] == 'HOME':
-    # Cinematic Header
     st.markdown("""
         <div style="text-align: center; padding: 10px 0 40px 0;">
             <p style='color: #D4AF37; font-weight: 400; font-size: 14px; letter-spacing: 3px; margin-bottom: 10px;'>EXCLUSIVE ACCESS</p>
@@ -148,7 +142,6 @@ if st.session_state['current_page'] == 'HOME':
             
             filtered_deals = [d for d in deals if search_loc == "" or search_loc.lower() in d['loc'].lower()]
             
-            # --- DARK GHOST TOWN UI ---
             if len(deals) == 0:
                 st.write("")
                 st.markdown("<h1 style='text-align: center; font-size: 60px; color: #333;'>🍽️</h1>", unsafe_allow_html=True)
@@ -158,7 +151,6 @@ if st.session_state['current_page'] == 'HOME':
             elif len(filtered_deals) == 0 and search_loc != "":
                 st.info(f"No current offerings found in '{search_loc}'.")
             
-            # SHOW THE DEALS
             else:
                 for deal in filtered_deals:
                     with st.container(border=True):
@@ -194,25 +186,42 @@ elif st.session_state['current_page'] == 'RESERVATION':
     st.markdown("<h2 style='text-align: center; margin-top: 30px;'>Partner Portal</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #888; letter-spacing: 1px; margin-bottom: 40px;'>AUTHORIZED VENDORS ONLY</p>", unsafe_allow_html=True)
     
-    with st.form("shop_form", border=True):
-        shop = st.text_input("ESTABLISHMENT NAME")
-        phone = st.text_input("WHATSAPP NUMBER", "91")
-        loc = st.text_input("LOCATION")
-        item = st.text_input("CULINARY ITEM")
-        c_p, c_q = st.columns(2)
-        with c_p: price = int(st.number_input("EXCLUSIVE PRICE (₹)", min_value=1, value=50))
-        with c_q: stock = int(st.number_input("QUANTITY", min_value=1, value=1))
-        photo = st.file_uploader("UPLOAD HIGH-RES IMAGE", type=["jpg", "jpeg", "png"])
-        
-        if st.form_submit_button("PUBLISH OFFERING") and supabase:
-            if photo and loc:
-                with st.spinner("Publishing..."):
-                    f_bytes = photo.getvalue()
-                    f_name = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{photo.name.replace(' ','_')}"
-                    supabase.storage.from_("food_images").upload(f_name, f_bytes, {"content-type": photo.type})
-                    img_url = supabase.storage.from_("food_images").get_public_url(f_name)
-                    supabase.table("deals").insert({"item": item, "shop": shop, "loc": loc, "old_price": price*2, "new_price": price, "image_url": img_url, "phone": phone, "quantity": stock}).execute()
-                    st.success("Offering is now live.")
+    # --- THE SECURITY GATE ---
+    if not st.session_state['vendor_unlocked']:
+        with st.form("vendor_login", border=True):
+            pin = st.text_input("ENTER VENDOR PIN", type="password")
+            if st.form_submit_button("VERIFY ACCESS"):
+                if pin == "8899":
+                    st.session_state['vendor_unlocked'] = True
+                    st.rerun()
+                else: 
+                    st.error("Invalid Credentials. Access Denied.")
+    # -------------------------
+    else:
+        st.success("Identity Verified. You may publish an offering.")
+        if st.button("⬅️ Lock Portal"):
+            st.session_state['vendor_unlocked'] = False
+            st.rerun()
+            
+        with st.form("shop_form", border=True):
+            shop = st.text_input("ESTABLISHMENT NAME")
+            phone = st.text_input("WHATSAPP NUMBER", "91")
+            loc = st.text_input("LOCATION")
+            item = st.text_input("CULINARY ITEM")
+            c_p, c_q = st.columns(2)
+            with c_p: price = int(st.number_input("EXCLUSIVE PRICE (₹)", min_value=1, value=50))
+            with c_q: stock = int(st.number_input("QUANTITY", min_value=1, value=1))
+            photo = st.file_uploader("UPLOAD HIGH-RES IMAGE", type=["jpg", "jpeg", "png"])
+            
+            if st.form_submit_button("PUBLISH OFFERING") and supabase:
+                if photo and loc:
+                    with st.spinner("Publishing..."):
+                        f_bytes = photo.getvalue()
+                        f_name = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{photo.name.replace(' ','_')}"
+                        supabase.storage.from_("food_images").upload(f_name, f_bytes, {"content-type": photo.type})
+                        img_url = supabase.storage.from_("food_images").get_public_url(f_name)
+                        supabase.table("deals").insert({"item": item, "shop": shop, "loc": loc, "old_price": price*2, "new_price": price, "image_url": img_url, "phone": phone, "quantity": stock}).execute()
+                        st.success("Offering is now live.")
 
 # ==========================================
 # PAGES: PLACEHOLDERS (Gallery, Party, Contact)
