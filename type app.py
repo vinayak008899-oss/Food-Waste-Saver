@@ -36,9 +36,9 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,700;1,600&display=swap');
     
-    /* SAFE FONT APPLICATION (Protects the icon engine) */
-    html, body, p, label, button, input {
-        font-family: 'Montserrat', sans-serif !important;
+    /* SAFE FONT APPLICATION (Notice 'button' is removed to protect the menu icon!) */
+    html, body, p, label, input, div {
+        font-family: 'Montserrat', sans-serif;
         color: #E0E0E0;
     }
     h1, h2, h3, h4, h5 {
@@ -49,14 +49,20 @@ st.markdown("""
 
     /* HEADER & TOOLBAR ASSASSINATION */
     header {background-color: transparent !important;}
-    [data-testid="stToolbar"] {display: none !important;}
     [data-testid="stHeaderActionElements"] {display: none !important;}
     footer {visibility: hidden;}
     .stDeployButton {display: none !important;}
     
     /* MENU BUTTON GOLD ACCENT */
-    [data-testid="collapsedControl"] {color: #D4AF37 !important;}
-    [data-testid="collapsedControl"] svg {fill: #D4AF37 !important; color: #D4AF37 !important;}
+    [data-testid="collapsedControl"] {
+        color: #D4AF37 !important;
+        display: flex !important;
+        z-index: 999999 !important;
+    }
+    [data-testid="collapsedControl"] svg {
+        fill: #D4AF37 !important; 
+        color: #D4AF37 !important;
+    }
     
     /* CINEMATIC BACKGROUND */
     .stApp {
