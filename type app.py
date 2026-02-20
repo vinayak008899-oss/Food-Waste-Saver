@@ -47,11 +47,18 @@ st.markdown("""
         letter-spacing: 1px;
     }
 
-    /* THE BULLETPROOF HEADER FIX */
-    header { background-color: transparent !important; }
-    .stAppToolbar { display: none !important; } /* Only hides the right-side tools safely */
+    /* THE BULLETPROOF HEADER (We let Streamlit keep its tools, but we paint it black to blend in) */
+    [data-testid="stHeader"] {
+        background-color: #0A0A0A !important;
+    }
     .stDeployButton { display: none !important; } 
     footer { visibility: hidden; }
+    
+    /* NATIVE MENU BUTTON TINTED GOLD */
+    [data-testid="collapsedControl"] svg {
+        color: #D4AF37 !important;
+        fill: #D4AF37 !important;
+    }
     
     /* CINEMATIC BACKGROUND */
     .stApp {
