@@ -36,7 +36,8 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,700;1,600&display=swap');
     
-    html, body, [class*="css"], p, span, div {
+    /* SAFE FONT APPLICATION (Protects the icon engine) */
+    html, body, p, label, button, input {
         font-family: 'Montserrat', sans-serif !important;
         color: #E0E0E0;
     }
@@ -46,13 +47,18 @@ st.markdown("""
         letter-spacing: 1px;
     }
 
-    /* --- THE HEADER & MENU BUG FIX --- */
+    /* HEADER & TOOLBAR ASSASSINATION */
     header {background-color: transparent !important;}
-    [data-testid="stHeaderActionElements"] {display: none !important;} /* Kills the Share/GitHub junk */
-    [data-testid="collapsedControl"] svg {color: #D4AF37 !important; fill: #D4AF37 !important;} /* Makes Menu Gold */
+    [data-testid="stToolbar"] {display: none !important;}
+    [data-testid="stHeaderActionElements"] {display: none !important;}
     footer {visibility: hidden;}
-    /* --------------------------------- */
+    .stDeployButton {display: none !important;}
     
+    /* MENU BUTTON GOLD ACCENT */
+    [data-testid="collapsedControl"] {color: #D4AF37 !important;}
+    [data-testid="collapsedControl"] svg {fill: #D4AF37 !important; color: #D4AF37 !important;}
+    
+    /* CINEMATIC BACKGROUND */
     .stApp {
         background-color: #0A0A0A;
         animation: appFadeIn 1.5s ease-out;
@@ -62,6 +68,7 @@ st.markdown("""
         100% { opacity: 1; filter: brightness(1); }
     }
     
+    /* FOOD CARDS */
     [data-testid="stVerticalBlockBorderWrapper"] {
         border-radius: 4px !important;
         background: #121212 !important;
@@ -73,6 +80,7 @@ st.markdown("""
         border-color: #D4AF37 !important; 
     }
     
+    /* BUTTONS */
     div.stButton > button {
         width: 100%;
         background: transparent;
@@ -92,6 +100,7 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
     }
     
+    /* INPUTS */
     .stTextInput>div>div>input {
         background-color: #1A1A1A;
         color: #FFF;
@@ -104,6 +113,7 @@ st.markdown("""
         border: 1px solid #333;
     }
     
+    /* SIDEBAR */
     [data-testid="stSidebar"] {
         background-color: #050505 !important;
         border-right: 1px solid #222;
@@ -224,7 +234,6 @@ elif st.session_state['current_page'] == 'RESERVATION':
                 if photo and loc:
                     with st.spinner("Processing & Uploading..."):
                         img = Image.open(photo)
-                        
                         width, height = img.size
                         target_ratio = 16 / 9
                         current_ratio = width / height
@@ -242,7 +251,6 @@ elif st.session_state['current_page'] == 'RESERVATION':
                             
                         img = img.resize((800, 450), Image.Resampling.LANCZOS)
                         buf = io.BytesIO()
-                        
                         if img.mode in ("RGBA", "P"):
                             img = img.convert("RGB")
                             
